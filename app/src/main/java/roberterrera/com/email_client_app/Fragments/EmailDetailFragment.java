@@ -59,7 +59,7 @@ public class EmailDetailFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.email_detail, container, false);
 
         // Show the dummy content as text in a TextView.

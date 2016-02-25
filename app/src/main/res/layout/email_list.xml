@@ -10,4 +10,6 @@
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
     tools:context=".Activities.EmailListActivity"
-    tools:listitem="@layout/email_list_content" />
+    tools:listitem="@layout/email_list_content" >
+
+</android.support.v7.widget.RecyclerView>
