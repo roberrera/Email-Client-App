@@ -9,5 +9,5 @@
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context="roberterrera.com.email_client_app.EmailListActivity"
+    tools:context=".Activities.EmailListActivity"
     tools:listitem="@layout/email_list_content" />

@@ -1,4 +1,4 @@
-package roberterrera.com.email_client_app;
+package roberterrera.com.email_client_app.Fragments;
 
 import android.app.Activity;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -8,7 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import roberterrera.com.email_client_app.dummy.DummyContent;
+
+import roberterrera.com.email_client_app.Activities.EmailDetailActivity;
+import roberterrera.com.email_client_app.Activities.EmailListActivity;
+import roberterrera.com.email_client_app.R;
+import roberterrera.com.email_client_app.Classes.Email;
 
 /**
  * A fragment representing a single Email detail screen.
@@ -26,7 +30,7 @@ public class EmailDetailFragment extends Fragment {
     /**
      * The dummy content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private Email.DummyItem mItem;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -43,7 +47,7 @@ public class EmailDetailFragment extends Fragment {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            mItem = Email.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);

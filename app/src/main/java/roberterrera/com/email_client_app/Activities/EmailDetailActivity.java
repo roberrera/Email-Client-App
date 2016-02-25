@@ -1,4 +1,4 @@
-package roberterrera.com.email_client_app;
+package roberterrera.com.email_client_app.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,6 +9,9 @@ import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+
+import roberterrera.com.email_client_app.Fragments.EmailDetailFragment;
+import roberterrera.com.email_client_app.R;
 
 /**
  * An activity representing a single Email detail screen. This
