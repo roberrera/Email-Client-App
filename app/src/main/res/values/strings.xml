@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Email-Client-App</string>
+    <string name="title_email_detail">Email Detail</string>
+</resources>
