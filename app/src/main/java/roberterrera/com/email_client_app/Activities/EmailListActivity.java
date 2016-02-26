@@ -55,20 +55,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import roberterrera.com.email_client_app.Classes.DummyContent;
 import roberterrera.com.email_client_app.Fragments.EmailDetailFragment;
 import roberterrera.com.email_client_app.R;
 import roberterrera.com.email_client_app.Classes.Email;
 
 import java.util.List;
 
-/**
- * An activity representing a list of Emails. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link EmailDetailActivity} representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
- */
 public class EmailListActivity extends AppCompatActivity {
 
     GoogleAccountCredential mCredential;
@@ -83,11 +76,6 @@ public class EmailListActivity extends AppCompatActivity {
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { GmailScopes.GMAIL_LABELS };
 
-
-    /**
-     * Create the main activity.
-     * @param savedInstanceState previously saved instance data.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,7 +104,7 @@ public class EmailListActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "This should compose an email. If it doesn't, Rob has more work to do!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -126,24 +114,20 @@ public class EmailListActivity extends AppCompatActivity {
         setupRecyclerView((RecyclerView) recyclerView);
 
         if (findViewById(R.id.email_detail_container) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
             mTwoPane = true;
         }
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(Email.ITEMS));
+        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
     }
 
     public class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
-        private final List<Email.DummyItem> mValues;
+        private final List<DummyContent.DummyItem> mValues;
 
-        public SimpleItemRecyclerViewAdapter(List<Email.DummyItem> items) {
+        public SimpleItemRecyclerViewAdapter(List<DummyContent.DummyItem> items) {
             mValues = items;
         }
 
@@ -191,7 +175,7 @@ public class EmailListActivity extends AppCompatActivity {
             public final View mView;
             public final TextView mIdView;
             public final TextView mContentView;
-            public Email.DummyItem mItem;
+            public DummyContent.DummyItem mItem;
 
             public ViewHolder(View view) {
                 super(view);
