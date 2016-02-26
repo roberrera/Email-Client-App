@@ -11,12 +11,20 @@
     android:orientation="horizontal"
     tools:context="roberterrera.com.email_client_app.Activities.MainActivity">
 
-    <fragment
-        android:id="@+id/list_fragment"
-        android:name="roberterrera.com.email_client_app.Fragments.ListFragment"
-        android:layout_width="0dp"
-        android:layout_weight="0.5"
-        android:layout_height="match_parent" />
+    <!--<fragment-->
+        <!--android:id="@+id/list_fragment"-->
+        <!--android:name="roberterrera.com.email_client_app.Fragments.ListFragment"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_weight="0.5"-->
+        <!--android:layout_height="match_parent" />-->
+
+
+    <ListView
+        android:id="@+id/listview_email_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </ListView>
 
     <fragment
         android:id="@+id/detail_fragment"

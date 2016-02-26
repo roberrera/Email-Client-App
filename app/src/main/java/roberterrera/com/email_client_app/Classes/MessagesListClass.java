@@ -14,18 +14,8 @@ import java.util.List;
  */
 public class MessagesListClass {
 
-        // ...
+         // List all Messages of the user's mailbox matching the query.
 
-
-        /**
-         * List all Messages of the user's mailbox matching the query.
-         *
-         * @param service Authorized Gmail API instance.
-         * @param userId User's email address. The special value "me"
-         * can be used to indicate the authenticated user.
-         * @param query String used to filter the Messages listed.
-         * @throws IOException
-         */
         public static List<Message> listMessagesMatchingQuery(Gmail service, String userId,
                                                               String query) throws IOException {
             ListMessagesResponse response = service.users().messages().list(userId).setQ(query).execute();
@@ -49,15 +39,15 @@ public class MessagesListClass {
             return messages;
         }
 
-        /**
-         * List all Messages of the user's mailbox with labelIds applied.
-         *
-         * @param service Authorized Gmail API instance.
-         * @param userId User's email address. The special value "me"
-         * can be used to indicate the authenticated user.
-         * @param labelIds Only return Messages with these labelIds applied.
-         * @throws IOException
-         */
+
+         // List all Messages of the user's mailbox with labelIds applied.
+//         *
+//         * @param service Authorized Gmail API instance.
+//         * @param userId User's email address. The special value "me"
+//         * can be used to indicate the authenticated user.
+//         * @param labelIds Only return Messages with these labelIds applied.
+//         * @throws IOException
+//         */
         public static List<Message> listMessagesWithLabels(Gmail service, String userId,
                                                            List<String> labelIds) throws IOException {
             ListMessagesResponse response = service.users().messages().list(userId)

@@ -20,8 +20,9 @@ public class DetailFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_detail, container, false);
     }
 
-    public void setPlanetText(String planetText){
+    public void setMessageText(String messageText){
+
         TextView textView = (TextView)getView().findViewById(R.id.text);
-        textView.setText(planetText);
+        textView.setText(messageText);
     }
 }

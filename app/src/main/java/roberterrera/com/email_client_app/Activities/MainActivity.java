@@ -39,7 +39,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,24 +53,24 @@ import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.Fragments.ListFragment;
 import roberterrera.com.email_client_app.R;
 
-public class MainActivity extends AppCompatActivity implements ListFragment.OnPlanetSelectedListener {
+public class MainActivity extends AppCompatActivity implements ListFragment.OnMessageSelectedListener {
     GoogleAccountCredential mCredential;
-    private TextView mOutputText;
+//    private TextView mOutputText;
     ProgressDialog mProgress;
     private boolean mTwoPane;
-    private Context context;
+    public static ArrayList<String> mEmailList;
+    public static ArrayAdapter<String> mEmailListAdapter;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     private static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = { GmailScopes.GMAIL_LABELS };
-    private String getMessagesListURL = "GET https://www.googleapis.com/gmail/v1/users/me/messages?key=627726008716-iggf2ibs9o56f7ej7hn8d6st91sg33vh.apps.googleusercontent.com";
-
+    private static final String[] SCOPES = { GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_READONLY, GmailScopes.GMAIL_COMPOSE, GmailScopes.GMAIL_INSERT,GmailScopes.MAIL_GOOGLE_COM, GmailScopes.GMAIL_MODIFY};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
 //        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
@@ -86,14 +89,15 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
             mTwoPane = true;
         }
 
-        mOutputText = new TextView(this);
-        mOutputText.setVerticalScrollBarEnabled(true);
-        mOutputText.setMovementMethod(new ScrollingMovementMethod());
+//        mOutputText = new TextView(this);
+//        mOutputText.setVerticalScrollBarEnabled(true);
+//        mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Calling Gmail API ...");
 
         // Initialize credentials and service object.
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff())
@@ -101,31 +105,28 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
     }
 
 
-    /**
-     * Called whenever this activity is pushed to the foreground, such as after
-     * a call to onCreate().
-     */
+
+     //Called whenever this activity is pushed to the foreground, such as after
+     // a call to onCreate().
+
     @Override
     protected void onResume() {
         super.onResume();
         if (isGooglePlayServicesAvailable()) {
             refreshResults();
         } else {
-            mOutputText.setText("Google Play Services required: " +
-                    "after installing, close and relaunch this app.");
+//            mOutputText.setText("Google Play Services required: " +
+//                    "after installing, close and relaunch this app.");
+            Toast.makeText(MainActivity.this, "Google Play Services required: " +
+                    "after installing, close and relaunch this app.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * Called when an activity launched here (specifically, AccountPicker
-     * and authorization) exits, giving you the requestCode you started it with,
-     * the resultCode it returned, and any additional data from it.
-     * @param requestCode code indicating which activity result is incoming.
-     * @param resultCode code indicating the result of the incoming
-     *     activity result.
-     * @param data Intent (containing result data) returned by incoming
-     *     activity result.
-     */
+
+      // Called when an activity launched here (specifically, AccountPicker
+      // and authorization) exits, giving you the requestCode you started it with,
+      // the resultCode it returned, and any additional data from it.
+
     @Override
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
@@ -150,7 +151,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
                         editor.apply();
                     }
                 } else if (resultCode == RESULT_CANCELED) {
-                    mOutputText.setText("Account unspecified.");
+//                    mOutputText.setText("Account unspecified.");
+                    Toast.makeText(MainActivity.this, "Account unspecified", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case REQUEST_AUTHORIZATION:
@@ -163,11 +165,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    /**
-     * Attempt to get a set of data from the Gmail API to display. If the
-     * email address isn't known yet, then call chooseAccount() method so the
-     * user can pick an account.
-     */
+
+      // Attempt to get a set of data from the Gmail API to display. If the
+      // email address isn't known yet, then call chooseAccount() method so the
+      // user can pick an account.
+
     private void refreshResults() {
         if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
@@ -175,24 +177,24 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
             if (isDeviceOnline()) {
                 new MakeRequestTask(mCredential).execute();
             } else {
-                mOutputText.setText("No network connection available.");
+//                mOutputText.setText("No network connection available.");
+                Toast.makeText(MainActivity.this, "No network connection available.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    /**
-     * Starts an activity in Google Play Services so the user can pick an
-     * account.
-     */
+
+      // Starts an activity in Google Play Services so the user can pick an
+      //account.
+
     private void chooseAccount() {
         startActivityForResult(
                 mCredential.newChooseAccountIntent(), REQUEST_ACCOUNT_PICKER);
     }
 
-    /**
-     * Checks whether the device currently has a network connection.
-     * @return true if the device has a network connection, false otherwise.
-     */
+
+      // Checks whether the device currently has a network connection.
+
     private boolean isDeviceOnline() {
         ConnectivityManager connMgr =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -200,13 +202,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-    /**
-     * Check that Google Play services APK is installed and up to date. Will
-     * launch an error dialog for the user to update Google Play Services if
-     * possible.
-     * @return true if Google Play Services is available and up to
-     *     date on this device; false otherwise.
-     */
+
+      // Check that Google Play services APK is installed and up to date. Will
+      // launch an error dialog for the user to update Google Play Services if
+      // possible.
+
     private boolean isGooglePlayServicesAvailable() {
         final int connectionStatusCode =
                 GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
@@ -219,12 +219,10 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
         return true;
     }
 
-    /**
-     * Display an error dialog showing that Google Play Services is missing
-     * or out of date.
-     * @param connectionStatusCode code describing the presence (or lack of)
-     *     Google Play Services on this device.
-     */
+
+      // Display an error dialog showing that Google Play Services is missing
+      //or out of date.
+
     void showGooglePlayServicesAvailabilityErrorDialog(
             final int connectionStatusCode) {
         Dialog dialog = GooglePlayServicesUtil.getErrorDialog(
@@ -234,11 +232,12 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
         dialog.show();
     }
 
-    /**
-     * An asynchronous task that handles the Gmail API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
-     */
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+
+      // An asynchronous task that handles the Gmail API call.
+      // Placing the API calls in their own task ensures the UI stays responsive.
+
+    private class MakeRequestTask extends AsyncTask<Void, Void, ArrayList<String>> {
+
         private com.google.api.services.gmail.Gmail mService = null;
         private Exception mLastError = null;
 
@@ -247,18 +246,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.gmail.Gmail.Builder(
                     transport, jsonFactory, credential)
-                    .setApplicationName("Gmail API Android Quickstart")
+                    .setApplicationName("RobMail")
                     .build();
         }
 
-        /**
-         * Background task to call Gmail API.
-         * @param params no parameters needed for this task.
-         */
+
+          // Background task to call Gmail API.
         @Override
-        protected List<String> doInBackground(Void... params) {
+        protected ArrayList<String> doInBackground(Void... params) {
             try {
-                return getDataFromApi();
+                return getMessageIdFromApi();
             } catch (Exception e) {
                 mLastError = e;
                 cancel(true);
@@ -266,40 +263,66 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
             }
         }
 
-        /**
-         * Fetch a list of Gmail labels attached to the specified account.
-         * @return List of Strings labels.
-         * @throws IOException
-         */
+          // Fetch a list of Gmail labels attached to the specified account.
         private List<String> getDataFromApi() throws IOException {
+            Log.d("MAINACTIVITY", "Successfully made it into getDataFromApi()");
             // Get the labels in the user's account.
             String user = "me";
+            Log.d("MAINACTIVITY", "user = me");
             List<String> labels = new ArrayList<String>();
-            ListLabelsResponse listResponse =
-                    mService.users().labels().list(user).execute();
+            Log.d("MAINACTIVITY", "labels = new ArrayList<String>");
+
+            ListLabelsResponse listResponse = mService.users().labels().list(user).execute();
+            Log.d("MAINACTIVITY", "listResponse = yada yada");ListMessagesResponse messagesResponse = mService.users().messages().list(user).execute();
+
+            // Get labels
             for (Label label : listResponse.getLabels()) {
+                Log.d("LABELS_FOR_LOOP", "Successfully made it into the Labels for loop");
                 labels.add(label.getName());
+
+                Log.d("LABELS_FOR_LOOP", label.getName());
             }
             return labels;
         }
 
+        private ArrayList<String> getMessageIdFromApi() throws IOException {
+            ArrayList<String> messageIds = new ArrayList<String>();
+
+            String user = "me";
+
+            ListMessagesResponse messageResponse = mService.users().messages().list(user).execute();
+            Log.d("MAINACTIVITY", "messagesResponse = yada yada");
+
+            ArrayList<Message> messages = new ArrayList<Message>();
+            Log.d("MAINACTIVITY", "messages = new ArrayList<String>");
+
+            // Get Message
+            for (Message message : messageResponse.getMessages()) {
+                messageIds.add(message.getId());
+
+                String sLog = message.getSnippet();
+                Log.d("MESSAGES_CONTENT", sLog);
+            }
+            return messageIds;
+        }
 
         @Override
         protected void onPreExecute() {
-            mOutputText.setText("");
+//            mOutputText.setText("");
             mProgress.show();
         }
 
-        @Override
-        protected void onPostExecute(List<String> output) {
-            mProgress.hide();
-            if (output == null || output.size() == 0) {
-                mOutputText.setText("No results returned.");
-            } else {
-                output.add(0, "Data retrieved using the Gmail API:");
-                mOutputText.setText(TextUtils.join("\n", output));
-            }
-        }
+//        @Override
+//        protected void onPostExecute(List<String> output) {
+//            mProgress.hide();
+//            if (output == null || output.size() == 0) {
+////                mOutputText.setText("No results returned.");
+//                System.out.println("No results returned.");
+//            } else {
+//                output.add(0, "Data retrieved using the Gmail API:");
+////                mOutputText.setText(TextUtils.join("\n", output));
+//            }
+//        }
 
         @Override
         protected void onCancelled() {
@@ -314,26 +337,29 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnPl
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             MainActivity.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
+//                    mOutputText.setText("The following error occurred:\n"
+//                            + mLastError.getMessage());
+                    System.out.println( "The following error occurred:\n"
+                           + mLastError.getMessage() );
                 }
             } else {
-                mOutputText.setText("Request cancelled.");
+//                mOutputText.setText("Request cancelled.");
+                System.out.println("Request cancelled.");
             }
         }
     }
 
     @Override
-    public void onPlanetSelected(String selectedPlanet) {
+    public void onMessageSelected(String selectedMessage) {
 
         if (mTwoPane) {
             // Getting the text up from the first fragment
             DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
             // Passing the text down to the second fragment
-            detailFragment.setPlanetText("Clicked on " + selectedPlanet);
+            detailFragment.setMessageText(selectedMessage);
         } else {
             Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-            intent.putExtra("selected planet", selectedPlanet);
+            intent.putExtra(selectedMessage, "Selected message");
             startActivity(intent);
         }
 
