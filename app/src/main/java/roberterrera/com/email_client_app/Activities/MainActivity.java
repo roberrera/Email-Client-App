@@ -1,30 +1,11 @@
+/**
+ * Created by Rob on 2/26/16.
+ */
 package roberterrera.com.email_client_app.Activities;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import android.accounts.AccountManager;
-import android.app.Activity;
-import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.AsyncTask;
-import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
-import android.widget.LinearLayout;
-
+/**
+ * Created by Rob on 2/26/16.
+ */
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -41,49 +22,69 @@ import com.google.api.services.gmail.GmailScopes;
 
 import com.google.api.services.gmail.model.*;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.accounts.AccountManager;
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
+import android.widget.TextView;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import roberterrera.com.email_client_app.Classes.DummyContent;
-import roberterrera.com.email_client_app.Fragments.EmailDetailFragment;
+import roberterrera.com.email_client_app.Fragments.DetailFragment;
+import roberterrera.com.email_client_app.Fragments.ListFragment;
 import roberterrera.com.email_client_app.R;
-import roberterrera.com.email_client_app.Classes.Email;
 
-import java.util.List;
-
-public class EmailListActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity implements ListFragment.OnPlanetSelectedListener {
     GoogleAccountCredential mCredential;
     private TextView mOutputText;
     ProgressDialog mProgress;
     private boolean mTwoPane;
-    private ArrayList<Email> mEmailArrayList;
+    private Context context;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { GmailScopes.GMAIL_LABELS };
+    private String getMessagesListURL = "GET https://www.googleapis.com/gmail/v1/users/me/messages?key=627726008716-iggf2ibs9o56f7ej7hn8d6st91sg33vh.apps.googleusercontent.com";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_email_list);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+//        toolbar.setTitle(getTitle());
+//
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
+
+        if (findViewById(R.id.detail_fragment) != null) {
+            mTwoPane = true;
+        }
 
         mOutputText = new TextView(this);
         mOutputText.setVerticalScrollBarEnabled(true);
@@ -91,105 +92,14 @@ public class EmailListActivity extends AppCompatActivity {
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Calling Gmail API ...");
 
-
         // Initialize credentials and service object.
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff())
                 .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, null));
-
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "This should compose an email. If it doesn't, Rob has more work to do!", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        View recyclerView = findViewById(R.id.email_list);
-        assert recyclerView != null;
-        setupRecyclerView((RecyclerView) recyclerView);
-
-        if (findViewById(R.id.email_detail_container) != null) {
-            mTwoPane = true;
-        }
     }
 
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
-    }
-
-    public class SimpleItemRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
-
-        private final List<DummyContent.DummyItem> mValues;
-
-        public SimpleItemRecyclerViewAdapter(List<DummyContent.DummyItem> items) {
-            mValues = items;
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.email_list_content, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mItem = mValues.get(position);
-            holder.mIdView.setText(mValues.get(position).id);
-            holder.mContentView.setText(mValues.get(position).content);
-
-            holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mTwoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putString(EmailDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-                        EmailDetailFragment fragment = new EmailDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.email_detail_container, fragment)
-                                .commit();
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, EmailDetailActivity.class);
-                        intent.putExtra(EmailDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-
-                        context.startActivity(intent);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mValues.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final TextView mIdView;
-            public final TextView mContentView;
-            public DummyContent.DummyItem mItem;
-
-            public ViewHolder(View view) {
-                super(view);
-                mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
-                mContentView = (TextView) view.findViewById(R.id.content);
-            }
-
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
-            }
-        }
-    }
 
     /**
      * Called whenever this activity is pushed to the foreground, such as after
@@ -319,7 +229,7 @@ public class EmailListActivity extends AppCompatActivity {
             final int connectionStatusCode) {
         Dialog dialog = GooglePlayServicesUtil.getErrorDialog(
                 connectionStatusCode,
-                EmailListActivity.this,
+                MainActivity.this,
                 REQUEST_GOOGLE_PLAY_SERVICES);
         dialog.show();
     }
@@ -402,7 +312,7 @@ public class EmailListActivity extends AppCompatActivity {
                 } else if (mLastError instanceof UserRecoverableAuthIOException) {
                     startActivityForResult(
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            EmailListActivity.REQUEST_AUTHORIZATION);
+                            MainActivity.REQUEST_AUTHORIZATION);
                 } else {
                     mOutputText.setText("The following error occurred:\n"
                             + mLastError.getMessage());
@@ -411,5 +321,21 @@ public class EmailListActivity extends AppCompatActivity {
                 mOutputText.setText("Request cancelled.");
             }
         }
+    }
+
+    @Override
+    public void onPlanetSelected(String selectedPlanet) {
+
+        if (mTwoPane) {
+            // Getting the text up from the first fragment
+            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
+            // Passing the text down to the second fragment
+            detailFragment.setPlanetText("Clicked on " + selectedPlanet);
+        } else {
+            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+            intent.putExtra("selected planet", selectedPlanet);
+            startActivity(intent);
+        }
+
     }
 }
