@@ -13,7 +13,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        String intent = getIntent().getStringExtra("selected planet");
+        String intent = getIntent().getStringExtra("Position");
         TextView textView = (TextView)findViewById(R.id.text);
         textView.setText(intent);
 

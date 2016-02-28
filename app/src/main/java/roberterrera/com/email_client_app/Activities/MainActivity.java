@@ -32,11 +32,15 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -52,6 +56,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import roberterrera.com.email_client_app.Classes.MessagesListClass;
+import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.R;
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mEmailListView;
     private ArrayList<String> mEmailMessageList;
     private ArrayAdapter<String> mEmailListAdapter;
+    
     private int getMessageListURL = R.string.get_list;
     private int getMessageDetailURL;
 
@@ -75,21 +81,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//
+//
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+//        toolbar.setTitle(getTitle());
 
-        /*
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton composeButton = (FloatingActionButton) findViewById(R.id.fab);
+        composeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Compose email function to come at a future date", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                // TODO: Set up compose email method and call it here.
             }
         });
-        */
+
 
         // Check if the device is a landscape tablet
         if (findViewById(R.id.detail_fragment) != null) {
@@ -100,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 //        mOutputText.setVerticalScrollBarEnabled(true);
 //        mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Calling Gmail API ...");
+        mProgress.setMessage("Loading Gmail Messages ...");
         mEmailListView = (ListView) findViewById(R.id.listview_email_list);
         mEmailMessageList = new ArrayList<>();
         mEmailListAdapter = new ArrayAdapter<String>(
@@ -119,15 +126,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(MainActivity.this, "You tapped " + position, Toast.LENGTH_SHORT).show();
-//                Intent intent = new Intent();
-//                intent.putExtra("Position", position);
-//                startActivity(intent);
+//                if (mTwoPane) {
+//                    // Getting the text up from the first fragment
+//                    DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
+//                    // Passing the text down to the second fragment
+//                    detailFragment.setMessageText(selectedMessage);
+//                } else {
+//                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+//                    intent.putExtra("Position", position);
+//                    startActivity(intent);
+//                }
             }
         });
-
-
     }
-
 
 
      //Called whenever this activity is pushed to the foreground, such as after
@@ -266,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.gmail.Gmail.Builder(
                     transport, jsonFactory, credential)
-                    .setApplicationName("RobMail")
+                    .setApplicationName("RobMail (Beta)")
                     .build();
         }
 
@@ -282,42 +293,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private List<String> getDataFromApi() throws IOException, MessagingException {
+
             String user = "me";
+
             ArrayList<String> labelsList = new ArrayList<>();
             labelsList.add("INBOX");
             labelsList.add("CATEGORY_PERSONAL");
-            // Get the labels in the user's account.
-  /*
-            ListLabelsResponse listResponse = mService.users().labels().list(user).execute();
-            for (Label label : listResponse.getLabels()) {
-                mEmailMessageList.add(label.getName());
-            }
-            return mEmailMessageList;
-        }
-        */
-            // Declare an array list of type MessagePartHeader to contain a list of headers.
-//            List<String> messagePartHeaders = new ArrayList<>();
-//            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
 
+            // Get the labels in the user's account.
             ListMessagesResponse messageResponse = mService.users().messages().list(user).
                     setLabelIds(labelsList).setIncludeSpamTrash(false).setMaxResults(20L).execute();
             // Call the getMessages() method and loop through the list of messages in the user account.
             for (Message message : messageResponse.getMessages()) {
                 // Get the id of the individual messages.
                 String messageId = message.getId();
-                 Log.d("FOR_EACH_MESSAGE", "Message ID = " + messageId);
                 // Get the contents of each individual message via the messages' messageId.
                 Message messages = MessagesListClass.getMessage(mService, user, messageId);
 
-                // For each header in a message, find the subject line of the message.
+                // For each MessagePartHeader in a message, find the subject line of the message.
                 for (MessagePartHeader header : messages.getPayload().getHeaders()){
                    // If the header name is 'Subject' get the value of the subject line.
                     if (header.getName().equals("Subject")){
                         String subject = header.getValue();
                         // Add the subject line value to the mssage part headers list.
                         mEmailMessageList.add("Subject: "+subject);
-                        Log.d("MESSAGES", "Subject line = " + subject);
-                        Log.d("MESSAGES", "mEmailMessageList size = " + mEmailMessageList.size());
                     }
                 }
             }
@@ -366,83 +365,6 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("Request cancelled.");
             }
         }
-    }
-/*
-    public class GetMessagesTask extends AsyncTask<String, Void, Void>{
-        @Override
-        protected Void doInBackground(String... params) {
-            String contentAsString = "";
-            InputStream inputStream = null;
-
-            try {
-                URL url = new URL(params[0]);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-
-                // Starts the query
-                conn.connect();
-                inputStream = conn.getInputStream();
-
-                // Converts the InputStream into a string
-                contentAsString = getInputStream(inputStream);
-
-            } catch (Throwable thr) {
-                thr.printStackTrace();
-            }
-
-            try {
-                mEmailMessageList.clear();
-
-                // Get the data inside the JSON object, and the data inside the object's array.
-                JSONObject dataObject = new JSONObject(contentAsString); // Could take no params, or could take the string you want to use.
-                JSONArray messagesJsonArray = dataObject.getJSONArray("messages"); // Getting the array gets the stuff inside the object.
-
-                // For every object in the item array, add the name to the ArrayList.
-                for (int i = 0; i < messagesJsonArray.length(); i++) {
-                    JSONObject object = messagesJsonArray.optJSONObject(i);
-                    String messages = object.optString("messages");
-                    mEmailMessageList.add(messages);
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            mProgress.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void output) {
-            super.onPostExecute(output);
-            mProgress.hide();
-            mEmailListAdapter.notifyDataSetChanged();
-        }
-    }
-*/
-    public String getInputStream(InputStream stream) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-        String read;
-
-        while((read = br.readLine()) != null) {
-            sb.append(read);
-        }
-
-        br.close();
-        return sb.toString();
     }
 
 //    @Override
