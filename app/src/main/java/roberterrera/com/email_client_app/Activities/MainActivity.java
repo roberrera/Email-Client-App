@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         mEmailListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "You tapped " + id, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "You tapped " + position, Toast.LENGTH_SHORT).show();
 //                Intent intent = new Intent();
 //                intent.putExtra("Position", position);
 //                startActivity(intent);
@@ -282,9 +282,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private List<String> getDataFromApi() throws IOException, MessagingException {
-
+            String user = "me";
+            ArrayList<String> labelsList = new ArrayList<>();
+            labelsList.add("INBOX");
+            labelsList.add("CATEGORY_PERSONAL");
             // Get the labels in the user's account.
-  /*          String user = "me";
+  /*
             ListLabelsResponse listResponse = mService.users().labels().list(user).execute();
             for (Label label : listResponse.getLabels()) {
                 mEmailMessageList.add(label.getName());
@@ -294,14 +297,17 @@ public class MainActivity extends AppCompatActivity {
         */
             // Declare an array list of type MessagePartHeader to contain a list of headers.
 //            List<String> messagePartHeaders = new ArrayList<>();
-            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
+//            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
+
+            ListMessagesResponse messageResponse = mService.users().messages().list(user).
+                    setLabelIds(labelsList).setIncludeSpamTrash(false).setMaxResults(20L).execute();
             // Call the getMessages() method and loop through the list of messages in the user account.
             for (Message message : messageResponse.getMessages()) {
                 // Get the id of the individual messages.
                 String messageId = message.getId();
                  Log.d("FOR_EACH_MESSAGE", "Message ID = " + messageId);
                 // Get the contents of each individual message via the messages' messageId.
-                Message messages = MessagesListClass.getMessage(mService, "me", messageId);
+                Message messages = MessagesListClass.getMessage(mService, user, messageId);
 
                 // For each header in a message, find the subject line of the message.
                 for (MessagePartHeader header : messages.getPayload().getHeaders()){
@@ -314,7 +320,6 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("MESSAGES", "mEmailMessageList size = " + mEmailMessageList.size());
                     }
                 }
-//                mEmailMessageList.add(messagePartHeaders);
             }
             return mEmailMessageList;
         }
