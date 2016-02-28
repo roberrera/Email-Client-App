@@ -8,11 +8,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import roberterrera.com.email_client_app.R;
+
 
 /**
  * Created by Rob on 2/26/16.
  */
 public class MessagesListClass {
+
+    public static int getMessageListURL = R.string.get_list;
+    public static int getMessageDetailURL;
 
          // List all Messages of the user's mailbox matching the query.
 

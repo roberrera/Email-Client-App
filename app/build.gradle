@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.example.gmailquickstart"
+        applicationId "roberterrera.com.email_client_app"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1

@@ -41,25 +41,38 @@ import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import roberterrera.com.email_client_app.Classes.MessagesListClass;
 import roberterrera.com.email_client_app.Fragments.DetailFragment;
-import roberterrera.com.email_client_app.Fragments.ListFragment;
 import roberterrera.com.email_client_app.R;
 
-public class MainActivity extends AppCompatActivity implements ListFragment.OnMessageSelectedListener {
+public class MainActivity extends AppCompatActivity {
     GoogleAccountCredential mCredential;
 //    private TextView mOutputText;
     ProgressDialog mProgress;
     private boolean mTwoPane;
-    public static ArrayList<String> mEmailList;
-    public static ArrayAdapter<String> mEmailListAdapter;
+    private ListView mEmailListView;
+    private ArrayList<List> mEmailMessageList;
+    private ArrayAdapter<List> mEmailListAdapter;
+    private int getMessageListURL = R.string.get_list;
+    private int getMessageDetailURL;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -72,19 +85,22 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-//        toolbar.setTitle(getTitle());
-//
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        /*
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle(getTitle());
 
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+        */
+
+        // Check if the device is a landscape tablet
         if (findViewById(R.id.detail_fragment) != null) {
             mTwoPane = true;
         }
@@ -94,6 +110,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
 //        mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Calling Gmail API ...");
+        mEmailListView = (ListView) findViewById(R.id.listview_email_list);
+        mEmailMessageList = new ArrayList<>();
+        mEmailListAdapter = new ArrayAdapter<List>(
+                MainActivity.this, android.R.layout.simple_list_item_1, mEmailMessageList);
+        mEmailListView.setAdapter(mEmailListAdapter);
 
         // Initialize credentials and service object.
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
@@ -236,8 +257,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
       // An asynchronous task that handles the Gmail API call.
       // Placing the API calls in their own task ensures the UI stays responsive.
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, ArrayList<String>> {
-
+    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.gmail.Gmail mService = null;
         private Exception mLastError = null;
 
@@ -246,16 +266,18 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.gmail.Gmail.Builder(
                     transport, jsonFactory, credential)
-                    .setApplicationName("RobMail")
+                    .setApplicationName("Gmail API Android Quickstart")
                     .build();
         }
 
-
-          // Background task to call Gmail API.
+        /**
+         * Background task to call Gmail API.
+         * @param params no parameters needed for this task.
+         */
         @Override
-        protected ArrayList<String> doInBackground(Void... params) {
+        protected List<String> doInBackground(Void... params) {
             try {
-                return getMessageIdFromApi();
+                return getDataFromApi();
             } catch (Exception e) {
                 mLastError = e;
                 cancel(true);
@@ -263,48 +285,35 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
             }
         }
 
-          // Fetch a list of Gmail labels attached to the specified account.
+        /**
+         * Fetch a list of Gmail labels attached to the specified account.
+         * @return List of Strings labels.
+         * @throws IOException
+         */
         private List<String> getDataFromApi() throws IOException {
-            Log.d("MAINACTIVITY", "Successfully made it into getDataFromApi()");
             // Get the labels in the user's account.
-            String user = "me";
-            Log.d("MAINACTIVITY", "user = me");
+
+            /*String user = "me";
             List<String> labels = new ArrayList<String>();
-            Log.d("MAINACTIVITY", "labels = new ArrayList<String>");
-
             ListLabelsResponse listResponse = mService.users().labels().list(user).execute();
-            Log.d("MAINACTIVITY", "listResponse = yada yada");ListMessagesResponse messagesResponse = mService.users().messages().list(user).execute();
-
-            // Get labels
             for (Label label : listResponse.getLabels()) {
-                Log.d("LABELS_FOR_LOOP", "Successfully made it into the Labels for loop");
                 labels.add(label.getName());
-
-                Log.d("LABELS_FOR_LOOP", label.getName());
+                mEmailMessageList.add(labels);
             }
             return labels;
-        }
+            */
 
-        private ArrayList<String> getMessageIdFromApi() throws IOException {
-            ArrayList<String> messageIds = new ArrayList<String>();
-
-            String user = "me";
-
-            ListMessagesResponse messageResponse = mService.users().messages().list(user).execute();
-            Log.d("MAINACTIVITY", "messagesResponse = yada yada");
-
-            ArrayList<Message> messages = new ArrayList<Message>();
-            Log.d("MAINACTIVITY", "messages = new ArrayList<String>");
-
-            // Get Message
+            List<String> messages = new ArrayList<String>();
+            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
             for (Message message : messageResponse.getMessages()) {
-                messageIds.add(message.getId());
 
-                String sLog = message.getSnippet();
-                Log.d("MESSAGES_CONTENT", sLog);
+                messages.add(message.getId());
+                mEmailMessageList.add(messages);
+                Log.d("MESSAGES", "mEmailMessageList size = " + String.valueOf(mEmailMessageList.size()));
             }
-            return messageIds;
+            return messages;
         }
+
 
         @Override
         protected void onPreExecute() {
@@ -312,17 +321,19 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
             mProgress.show();
         }
 
-//        @Override
-//        protected void onPostExecute(List<String> output) {
-//            mProgress.hide();
-//            if (output == null || output.size() == 0) {
-////                mOutputText.setText("No results returned.");
-//                System.out.println("No results returned.");
-//            } else {
-//                output.add(0, "Data retrieved using the Gmail API:");
-////                mOutputText.setText(TextUtils.join("\n", output));
-//            }
-//        }
+        @Override
+        protected void onPostExecute(List<String> output) {
+            mProgress.hide();
+            if (output == null || output.size() == 0) {
+//                mOutputText.setText("No results returned.");
+            } else {
+                output.add(0, "Data retrieved using the Gmail API:");
+//                mOutputText.setText(TextUtils.join("\n", output));
+            }
+            mEmailListAdapter.notifyDataSetChanged();
+            Log.d("ONPOSTEXECUTE", "notifyDataSetChanged method reached.");
+        }
+
 
         @Override
         protected void onCancelled() {
@@ -348,20 +359,97 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMe
             }
         }
     }
+/*
+    public class GetMessagesTask extends AsyncTask<String, Void, Void>{
+        @Override
+        protected Void doInBackground(String... params) {
+            String contentAsString = "";
+            InputStream inputStream = null;
 
-    @Override
-    public void onMessageSelected(String selectedMessage) {
+            try {
+                URL url = new URL(params[0]);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
 
-        if (mTwoPane) {
-            // Getting the text up from the first fragment
-            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
-            // Passing the text down to the second fragment
-            detailFragment.setMessageText(selectedMessage);
-        } else {
-            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-            intent.putExtra(selectedMessage, "Selected message");
-            startActivity(intent);
+                // Starts the query
+                conn.connect();
+                inputStream = conn.getInputStream();
+
+                // Converts the InputStream into a string
+                contentAsString = getInputStream(inputStream);
+
+            } catch (Throwable thr) {
+                thr.printStackTrace();
+            }
+
+            try {
+                mEmailMessageList.clear();
+
+                // Get the data inside the JSON object, and the data inside the object's array.
+                JSONObject dataObject = new JSONObject(contentAsString); // Could take no params, or could take the string you want to use.
+                JSONArray messagesJsonArray = dataObject.getJSONArray("messages"); // Getting the array gets the stuff inside the object.
+
+                // For every object in the item array, add the name to the ArrayList.
+                for (int i = 0; i < messagesJsonArray.length(); i++) {
+                    JSONObject object = messagesJsonArray.optJSONObject(i);
+                    String messages = object.optString("messages");
+                    mEmailMessageList.add(messages);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
         }
 
+        @Override
+        protected void onPreExecute() {
+            mProgress.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void output) {
+            super.onPostExecute(output);
+            mProgress.hide();
+            mEmailListAdapter.notifyDataSetChanged();
+        }
     }
+*/
+    public String getInputStream(InputStream stream) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+        String read;
+
+        while((read = br.readLine()) != null) {
+            sb.append(read);
+        }
+
+        br.close();
+        return sb.toString();
+    }
+
+//    @Override
+//    public void onMessageSelected(String selectedMessage) {
+//
+//        if (mTwoPane) {
+//            // Getting the text up from the first fragment
+//            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
+//            // Passing the text down to the second fragment
+//            detailFragment.setMessageText(selectedMessage);
+//        } else {
+//            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+//            intent.putExtra(selectedMessage, "Selected message");
+//            startActivity(intent);
+//        }
+//
+//    }
 }

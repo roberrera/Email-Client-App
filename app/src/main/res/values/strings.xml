@@ -1,14 +1,5 @@
 <resources>
     <string name="app_name">RobMail</string>
     <string name="title_email_detail">Email Detail</string>
-    <string-array name="Planets">
-        <item>Mercury</item>
-        <item>Venus</item>
-        <item>Earth</item>
-        <item>Mars</item>
-        <item>Jupiter</item>
-        <item>Saturn</item>
-        <item>Uranus</item>
-        <item>Neptune</item>
-    </string-array>
+    <string name="get_list">https://www.googleapis.com/gmail/v1/users/me/messages?key=627726008716-iggf2ibs9o56f7ej7hn8d6st91sg33vh.apps.googleusercontent.com</string>
 </resources>
