@@ -23,7 +23,6 @@ import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.*;
 
 import android.accounts.AccountManager;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -33,34 +32,26 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import roberterrera.com.email_client_app.Classes.MessagesListClass;
-import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.R;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressDialog mProgress;
     private boolean mTwoPane;
     private ListView mEmailListView;
-    private ArrayList<List> mEmailMessageList;
-    private ArrayAdapter<List> mEmailListAdapter;
+    private ArrayList<String> mEmailMessageList;
+    private ArrayAdapter<String> mEmailListAdapter;
     private int getMessageListURL = R.string.get_list;
     private int getMessageDetailURL;
 
@@ -112,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         mProgress.setMessage("Calling Gmail API ...");
         mEmailListView = (ListView) findViewById(R.id.listview_email_list);
         mEmailMessageList = new ArrayList<>();
-        mEmailListAdapter = new ArrayAdapter<List>(
+        mEmailListAdapter = new ArrayAdapter<String>(
                 MainActivity.this, android.R.layout.simple_list_item_1, mEmailMessageList);
         mEmailListView.setAdapter(mEmailListAdapter);
 
@@ -123,6 +114,18 @@ public class MainActivity extends AppCompatActivity {
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff())
                 .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, null));
+
+        mEmailListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(MainActivity.this, "You tapped " + id, Toast.LENGTH_SHORT).show();
+//                Intent intent = new Intent();
+//                intent.putExtra("Position", position);
+//                startActivity(intent);
+            }
+        });
+
+
     }
 
 
@@ -240,7 +243,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-
       // Display an error dialog showing that Google Play Services is missing
       //or out of date.
 
@@ -253,9 +255,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-
       // An asynchronous task that handles the Gmail API call.
-      // Placing the API calls in their own task ensures the UI stays responsive.
 
     private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.gmail.Gmail mService = null;
@@ -266,14 +266,10 @@ public class MainActivity extends AppCompatActivity {
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.gmail.Gmail.Builder(
                     transport, jsonFactory, credential)
-                    .setApplicationName("Gmail API Android Quickstart")
+                    .setApplicationName("RobMail")
                     .build();
         }
 
-        /**
-         * Background task to call Gmail API.
-         * @param params no parameters needed for this task.
-         */
         @Override
         protected List<String> doInBackground(Void... params) {
             try {
@@ -285,35 +281,43 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        /**
-         * Fetch a list of Gmail labels attached to the specified account.
-         * @return List of Strings labels.
-         * @throws IOException
-         */
-        private List<String> getDataFromApi() throws IOException {
-            // Get the labels in the user's account.
+        private List<String> getDataFromApi() throws IOException, MessagingException {
 
-            /*String user = "me";
-            List<String> labels = new ArrayList<String>();
+            // Get the labels in the user's account.
+  /*          String user = "me";
             ListLabelsResponse listResponse = mService.users().labels().list(user).execute();
             for (Label label : listResponse.getLabels()) {
-                labels.add(label.getName());
-                mEmailMessageList.add(labels);
+                mEmailMessageList.add(label.getName());
             }
-            return labels;
-            */
-
-            List<String> messages = new ArrayList<String>();
-            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
-            for (Message message : messageResponse.getMessages()) {
-
-                messages.add(message.getId());
-                mEmailMessageList.add(messages);
-                Log.d("MESSAGES", "mEmailMessageList size = " + String.valueOf(mEmailMessageList.size()));
-            }
-            return messages;
+            return mEmailMessageList;
         }
+        */
+            // Declare an array list of type MessagePartHeader to contain a list of headers.
+//            List<String> messagePartHeaders = new ArrayList<>();
+            ListMessagesResponse messageResponse = mService.users().messages().list("me").execute();
+            // Call the getMessages() method and loop through the list of messages in the user account.
+            for (Message message : messageResponse.getMessages()) {
+                // Get the id of the individual messages.
+                String messageId = message.getId();
+                 Log.d("FOR_EACH_MESSAGE", "Message ID = " + messageId);
+                // Get the contents of each individual message via the messages' messageId.
+                Message messages = MessagesListClass.getMessage(mService, "me", messageId);
 
+                // For each header in a message, find the subject line of the message.
+                for (MessagePartHeader header : messages.getPayload().getHeaders()){
+                   // If the header name is 'Subject' get the value of the subject line.
+                    if (header.getName().equals("Subject")){
+                        String subject = header.getValue();
+                        // Add the subject line value to the mssage part headers list.
+                        mEmailMessageList.add("Subject: "+subject);
+                        Log.d("MESSAGES", "Subject line = " + subject);
+                        Log.d("MESSAGES", "mEmailMessageList size = " + mEmailMessageList.size());
+                    }
+                }
+//                mEmailMessageList.add(messagePartHeaders);
+            }
+            return mEmailMessageList;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -327,11 +331,10 @@ public class MainActivity extends AppCompatActivity {
             if (output == null || output.size() == 0) {
 //                mOutputText.setText("No results returned.");
             } else {
-                output.add(0, "Data retrieved using the Gmail API:");
+//                output.add(0, "Data retrieved using the Gmail API:");
 //                mOutputText.setText(TextUtils.join("\n", output));
             }
             mEmailListAdapter.notifyDataSetChanged();
-            Log.d("ONPOSTEXECUTE", "notifyDataSetChanged method reached.");
         }
 
 
