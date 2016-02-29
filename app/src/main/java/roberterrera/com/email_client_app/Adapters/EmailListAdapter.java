@@ -19,10 +19,10 @@ public class EmailListAdapter extends ArrayAdapter<Email> {
 
     ArrayList<Email> mArrayList;
 
-    public EmailListAdapter(Context context, ArrayList<Email> newEmailArrayList) {
+    public EmailListAdapter(Context context, ArrayList<Email> emails) {
         super(context, -1);
 
-        mArrayList = new ArrayList<Email>();
+        mArrayList = emails;
     }
 
     @Override
@@ -46,6 +46,6 @@ public class EmailListAdapter extends ArrayAdapter<Email> {
 
     @Override
     public int getCount() {
-        return super.getCount();
+        return mArrayList.size();
     }
 }

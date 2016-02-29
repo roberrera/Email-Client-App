@@ -34,7 +34,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -45,6 +44,8 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
+import roberterrera.com.email_client_app.Adapters.EmailListAdapter;
+import roberterrera.com.email_client_app.Classes.Email;
 import roberterrera.com.email_client_app.Classes.Email_GetMessageClass;
 import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.R;
@@ -54,8 +55,9 @@ public class MainActivity extends AppCompatActivity {
 //    private TextView mOutputText;
     ProgressDialog mProgress;
     private boolean mTwoPane;
-    private ArrayList<String> mEmailMessageList;
-    private ArrayAdapter<String> mAdapter;
+    private ArrayList<Email> mEmailMessageList;
+    private EmailListAdapter adapter;
+    private ListView mEmailListView;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -83,19 +85,12 @@ public class MainActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-//        mOutputText = new TextView(this);
-//        mOutputText.setVerticalScrollBarEnabled(true);
-//        mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Loading Gmail Messages ...");
-        ListView mEmailListView = (ListView) findViewById(R.id.listview_email_list);
-        mEmailMessageList = new ArrayList<String>();
+        mEmailListView = (ListView) findViewById(R.id.listview_email_list);
+        mEmailMessageList = new ArrayList<>();
+        Email email = Email.getInstance();
 
-//        Email email = Email.getInstance();
-        // Declare custom adapter
-//        mAdapter = new EmailListAdapter(this, mEmailMessageList);
-        mAdapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_list_item_1, mEmailMessageList);
-        mEmailListView.setAdapter(mAdapter);
 
         // Initialize credentials and service object.
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
@@ -108,9 +103,6 @@ public class MainActivity extends AppCompatActivity {
         mEmailListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Toast.makeText(MainActivity.this, "You tapped " + position, Toast.LENGTH_SHORT).show();
-//                MessageDetailTask messageDetailTask = new MessageDetailTask();
-//                messageDetailTask.execute();
                 String selectedMessageBody = "Example message body.";
 
                 if (mTwoPane) {
@@ -120,11 +112,7 @@ public class MainActivity extends AppCompatActivity {
                     detailFragment.setMessageText("Item click successful.");
                 } else {
                     // TODO: Must change to pass message body, or the data should be gotten in an asynctask in the detail activity/fragment..
-//                    MessageDetailTask messageDetailTask = new MessageDetailTask();
-//                    messageDetailTask.execute();
                     Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-//                    intent.putExtra("POSITION", position);
-//                    intent.putExtra("BODY", mEmailMessageList.get(position).getMessageBody());
                     intent.putExtra("Selected message", selectedMessageBody);
                     startActivity(intent);
                 }
@@ -143,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
         if (isGooglePlayServicesAvailable()) {
             refreshResults();
         } else {
-//            mOutputText.setText("Google Play Services required: " +
-//                    "after installing, close and relaunch this app.");
             Toast.makeText(MainActivity.this, "Google Play Services required: " +
                     "after installing, close and relaunch this app.", Toast.LENGTH_SHORT).show();
         }
@@ -261,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
       // An asynchronous task that handles the Gmail API call.
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+    private class MakeRequestTask extends AsyncTask<Void, Void, List<Email>> {
         private com.google.api.services.gmail.Gmail mService = null;
         private Exception mLastError = null;
 
@@ -275,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected List<String> doInBackground(Void... params) {
+        protected List<Email> doInBackground(Void... params) {
             try {
                 return getDataFromApi();
             } catch (Exception e) {
@@ -295,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        private List<String> getDataFromApi() throws IOException, MessagingException {
+        private List<Email> getDataFromApi() throws IOException, MessagingException {
 
             String user = "me";
 
@@ -327,8 +313,8 @@ public class MainActivity extends AppCompatActivity {
                         fromUser = header.getValue();
                         Log.d("GET_DATA_FROM_API", "fromUser = " + fromUser);
                     }
-//                    mEmailMessageList.add(new Email(fromUser, subject));
-                    mEmailMessageList.add(subject);
+                    // TODO: Fix data that appears in listview. (Some null items are mixed in.)
+                    mEmailMessageList.add(new Email(fromUser, subject));
                 }
             }
             return mEmailMessageList;
@@ -338,13 +324,16 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
 //            mOutputText.setText("");
             mProgress.show();
+            // Declare custom adapter
         }
 
         @Override
-        protected void onPostExecute(List<String> output) {
+        protected void onPostExecute(List<Email> output) {
 //            super.onPostExecute(output);
             mProgress.hide();
-            mAdapter.notifyDataSetChanged();
+            adapter = new EmailListAdapter(MainActivity.this, mEmailMessageList);
+            mEmailListView.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
         }
 
 
@@ -361,31 +350,12 @@ public class MainActivity extends AppCompatActivity {
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             MainActivity.REQUEST_AUTHORIZATION);
                 } else {
-//                    mOutputText.setText("The following error occurred:\n"
-//                            + mLastError.getMessage());
                     System.out.println( "The following error occurred:\n"
                            + mLastError.getMessage() );
                 }
             } else {
-//                mOutputText.setText("Request cancelled.");
                 System.out.println("Request cancelled.");
             }
         }
     }
-
-//    @Override
-//    public void onMessageSelected(String selectedMessage) {
-//
-//        if (mTwoPane) {
-//            // Getting the text up from the first fragment
-//            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
-//            // Passing the text down to the second fragment
-//            detailFragment.setMessageText(selectedMessage);
-//        } else {
-//            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-//            intent.putExtra(selectedMessage, "Selected message");
-//            startActivity(intent);
-//        }
-//
-//    }
 }
