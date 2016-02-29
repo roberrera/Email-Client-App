@@ -35,27 +35,20 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
-import roberterrera.com.email_client_app.Classes.MessagesListClass;
+import roberterrera.com.email_client_app.Classes.EmailClass;
 import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.R;
 
@@ -67,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mEmailListView;
     private ArrayList<String> mEmailMessageList;
     private ArrayAdapter<String> mEmailListAdapter;
-    
+
     private int getMessageListURL = R.string.get_list;
     private int getMessageDetailURL;
 
@@ -81,19 +74,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//
-//
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-//        toolbar.setTitle(getTitle());
 
         FloatingActionButton composeButton = (FloatingActionButton) findViewById(R.id.fab);
         composeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // TODO: Set up compose email method and call it here.
                 Snackbar.make(view, "Compose email function to come at a future date", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                // TODO: Set up compose email method and call it here.
             }
         });
 
@@ -125,17 +113,25 @@ public class MainActivity extends AppCompatActivity {
         mEmailListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "You tapped " + position, Toast.LENGTH_SHORT).show();
-//                if (mTwoPane) {
-//                    // Getting the text up from the first fragment
-//                    DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
+//                Toast.makeText(MainActivity.this, "You tapped " + position, Toast.LENGTH_SHORT).show();
+//                MessageDetailTask messageDetailTask = new MessageDetailTask();
+//                messageDetailTask.execute();
+                String selectedMessageBody = "Example message body.";
+
+                if (mTwoPane) {
+                    // Getting the text up from the first fragment
+                    DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
 //                    // Passing the text down to the second fragment
-//                    detailFragment.setMessageText(selectedMessage);
-//                } else {
-//                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-//                    intent.putExtra("Position", position);
-//                    startActivity(intent);
-//                }
+                    detailFragment.setMessageText("Item click successful.");
+                } else {
+                    // TODO: Currently passes the subject line into the DetailActivity textview. Must change to pass message body.
+//                    MessageDetailTask messageDetailTask = new MessageDetailTask();
+//                    messageDetailTask.execute();
+                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+//                    intent.putExtra("POSITION", position);
+                    intent.putExtra("Selected message", selectedMessageBody);
+                    startActivity(intent);
+                }
             }
         });
     }
@@ -308,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                 // Get the id of the individual messages.
                 String messageId = message.getId();
                 // Get the contents of each individual message via the messages' messageId.
-                Message messages = MessagesListClass.getMessage(mService, user, messageId);
+                Message messages = EmailClass.getMessage(mService, user, messageId);
 
                 // For each MessagePartHeader in a message, find the subject line of the message.
                 for (MessagePartHeader header : messages.getPayload().getHeaders()){

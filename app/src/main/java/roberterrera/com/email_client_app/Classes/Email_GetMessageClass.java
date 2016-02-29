@@ -6,19 +6,16 @@ import com.google.api.services.gmail.model.Message;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-// ...
-
-public class MessageDetailClass {
-
-    // ...
-
+/**
+ * Created by Rob on 2/28/16.
+ */
+public class Email_GetMessageClass {
 
     /**
      * Get Message with given ID.
@@ -63,7 +60,4 @@ public class MessageDetailClass {
 
         return email;
     }
-
-    // ...
-
 }
