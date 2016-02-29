@@ -9,13 +9,56 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="roberterrera.com.email_client_app.Activities.ComposeActivity">
 
-    <TextView
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="The compose feature is not yet available. Check back soon!"
-        android:id="@+id/textView"
+        android:text="Send"
+        android:id="@+id/button"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="132dp" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/textview_to"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="To: "
+        android:textColor="#000000"
+        android:layout_alignBottom="@+id/button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+    <EditText
+        android:id="@+id/edittext_to"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="johnsmith@email.com"
+        android:layout_above="@+id/textview_subjectlabel"
+        android:layout_toRightOf="@+id/textview_subjectlabel"
+        android:layout_toEndOf="@+id/textview_subjectlabel" />
+
+    <TextView
+        android:id="@+id/textview_subjectlabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Subject: "
+        android:textColor="#000000"
+        android:layout_below="@id/textview_to"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+    <EditText
+        android:id="@+id/edittext_subject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Pull Request"
+        android:layout_alignTop="@+id/textview_to"
+        android:layout_toRightOf="@+id/textview_subjectlabel"
+        android:layout_toEndOf="@+id/textview_subjectlabel" />
+
+    <EditText
+        android:layout_marginTop="10dp"
+        android:id="@+id/edittext_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="The compose feature is not yet available. Check back soon!"
+        android:layout_below="@+id/edittext_subject" />
 </RelativeLayout>
