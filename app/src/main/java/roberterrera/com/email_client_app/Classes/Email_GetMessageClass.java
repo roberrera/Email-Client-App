@@ -2,10 +2,14 @@ package roberterrera.com.email_client_app.Classes;
 
 import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
+import com.google.api.services.gmail.model.MessagePartHeader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -35,6 +39,34 @@ public class Email_GetMessageClass {
 
         return message;
     }
+
+//    public static List<String> getFromUserFromApi() throws IOException, MessagingException {
+//        com.google.api.services.gmail.Gmail mService = null;
+//        Exception mLastError = null;
+//        String user = "me";
+//
+//        ArrayList<String> labelsList = new ArrayList<>();
+//        labelsList.add("INBOX");
+//        labelsList.add("CATEGORY_PERSONAL");
+//
+//        ArrayList<String> fromUserList = new ArrayList<>();
+//        ListMessagesResponse messageResponse = mService.users().messages().list(user).
+//                setLabelIds(labelsList).setIncludeSpamTrash(false).setMaxResults(20L).execute();
+//
+//        for (Message message : messageResponse.getMessages()) {
+//            String messageId = message.getId();
+//            Message messages = Email_GetMessageClass.getMessage(mService, user, messageId);
+//
+//            for (MessagePartHeader header : messages.getPayload().getHeaders()) {
+//
+//                if (header.getName().equals("From")) {
+//                    String from = header.getValue();
+//                    fromUserList.add("From: " + from);
+//                }
+//            }
+//        }
+//        return fromUserList;
+//    }
 
     /**
      * Get a Message and use it to create a MimeMessage.

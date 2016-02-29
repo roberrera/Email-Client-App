@@ -1,6 +1,3 @@
-/**
- * Created by Rob on 2/26/16.
- */
 package roberterrera.com.email_client_app.Activities;
 
 /**
@@ -35,6 +32,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -48,7 +46,9 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import roberterrera.com.email_client_app.Classes.EmailClass;
+import roberterrera.com.email_client_app.Adapters.EmailListAdapter;
+import roberterrera.com.email_client_app.Classes.Email;
+import roberterrera.com.email_client_app.Classes.Email_GetMessageClass;
 import roberterrera.com.email_client_app.Fragments.DetailFragment;
 import roberterrera.com.email_client_app.R;
 
@@ -57,12 +57,8 @@ public class MainActivity extends AppCompatActivity {
 //    private TextView mOutputText;
     ProgressDialog mProgress;
     private boolean mTwoPane;
-    private ListView mEmailListView;
-    private ArrayList<String> mEmailMessageList;
-    private ArrayAdapter<String> mEmailListAdapter;
-
-    private int getMessageListURL = R.string.get_list;
-    private int getMessageDetailURL;
+    private ArrayList<Email> mEmailMessageList;
+    private ArrayAdapter<Email> mAdapter;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -79,9 +75,8 @@ public class MainActivity extends AppCompatActivity {
         composeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Set up compose email method and call it here.
-                Snackbar.make(view, "Compose email function to come at a future date", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this, ComposeActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -96,11 +91,11 @@ public class MainActivity extends AppCompatActivity {
 //        mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Loading Gmail Messages ...");
-        mEmailListView = (ListView) findViewById(R.id.listview_email_list);
-        mEmailMessageList = new ArrayList<>();
-        mEmailListAdapter = new ArrayAdapter<String>(
-                MainActivity.this, android.R.layout.simple_list_item_1, mEmailMessageList);
-        mEmailListView.setAdapter(mEmailListAdapter);
+        ListView mEmailListView = (ListView) findViewById(R.id.listview_email_list);
+        mEmailMessageList = new ArrayList<Email>();
+        Email email = Email.getInstance();
+        mAdapter = new EmailListAdapter(this, mEmailMessageList);
+        mEmailListView.setAdapter(mAdapter);
 
         // Initialize credentials and service object.
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
@@ -124,16 +119,18 @@ public class MainActivity extends AppCompatActivity {
 //                    // Passing the text down to the second fragment
                     detailFragment.setMessageText("Item click successful.");
                 } else {
-                    // TODO: Currently passes the subject line into the DetailActivity textview. Must change to pass message body.
+                    // TODO: Must change to pass message body, or the data should be gotten in an asynctask in the detail activity/fragment..
 //                    MessageDetailTask messageDetailTask = new MessageDetailTask();
 //                    messageDetailTask.execute();
                     Intent intent = new Intent(MainActivity.this, DetailActivity.class);
 //                    intent.putExtra("POSITION", position);
+//                    intent.putExtra("BODY", mEmailMessageList.get(position).getMessageBody());
                     intent.putExtra("Selected message", selectedMessageBody);
                     startActivity(intent);
                 }
             }
         });
+
     }
 
 
@@ -264,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
 
       // An asynchronous task that handles the Gmail API call.
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+    private class MakeRequestTask extends AsyncTask<Void, Void, List<Email>> {
         private com.google.api.services.gmail.Gmail mService = null;
         private Exception mLastError = null;
 
@@ -278,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected List<String> doInBackground(Void... params) {
+        protected List<Email> doInBackground(Void... params) {
             try {
                 return getDataFromApi();
             } catch (Exception e) {
@@ -286,11 +283,23 @@ public class MainActivity extends AppCompatActivity {
                 cancel(true);
                 return null;
             }
+//            try {
+//                return Email_GetMessageClass.getFromUserFromApi();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                return null;
+//            } catch (MessagingException e) {
+//                e.printStackTrace();
+//                return null;
+//            }
+
         }
 
-        private List<String> getDataFromApi() throws IOException, MessagingException {
+        private List<Email> getDataFromApi() throws IOException, MessagingException {
 
             String user = "me";
+            String subject = null;
+            String fromUser = null;
 
             ArrayList<String> labelsList = new ArrayList<>();
             labelsList.add("INBOX");
@@ -304,16 +313,22 @@ public class MainActivity extends AppCompatActivity {
                 // Get the id of the individual messages.
                 String messageId = message.getId();
                 // Get the contents of each individual message via the messages' messageId.
-                Message messages = EmailClass.getMessage(mService, user, messageId);
+                Message messages = Email_GetMessageClass.getMessage(mService, user, messageId);
 
                 // For each MessagePartHeader in a message, find the subject line of the message.
                 for (MessagePartHeader header : messages.getPayload().getHeaders()){
                    // If the header name is 'Subject' get the value of the subject line.
                     if (header.getName().equals("Subject")){
-                        String subject = header.getValue();
-                        // Add the subject line value to the mssage part headers list.
-                        mEmailMessageList.add("Subject: "+subject);
+                        subject = header.getValue();
+                        Log.d("GET_DATA_FROM_API", "subject = " + subject);
                     }
+                    if (header.getName().equals("From")) {
+                        fromUser = header.getValue();
+                        Log.d("GET_DATA_FROM_API", "fromUser = " + fromUser);
+//                        fromUserList.add("From: " + from);
+                    }
+                    // Add the subject line value to the message part headers list.
+                    mEmailMessageList.add(new Email(fromUser, subject));
                 }
             }
             return mEmailMessageList;
@@ -326,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<String> output) {
+        protected void onPostExecute(List<Email> output) {
             mProgress.hide();
             if (output == null || output.size() == 0) {
 //                mOutputText.setText("No results returned.");
@@ -334,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
 //                output.add(0, "Data retrieved using the Gmail API:");
 //                mOutputText.setText(TextUtils.join("\n", output));
             }
-            mEmailListAdapter.notifyDataSetChanged();
+            mAdapter.notifyDataSetChanged();
         }
 
 

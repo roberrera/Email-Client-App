@@ -10,7 +10,7 @@ import com.google.api.services.gmail.model.MessagePartBody;
 
 import java.io.IOException;
 
-import roberterrera.com.email_client_app.Classes.EmailClass;
+import roberterrera.com.email_client_app.Classes.Email_ListClass;
 import roberterrera.com.email_client_app.R;
 
 public class DetailActivity extends AppCompatActivity {
@@ -22,7 +22,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        String intent = getIntent().getStringExtra("POSITION");
+//        String intent = getIntent().getStringExtra("Selected message");
         messageDetailTextView = (TextView)findViewById(R.id.text);
         messageBody = null;
 
@@ -37,8 +37,9 @@ public class DetailActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... params) {
-            MessagePartBody messagePartBody= new MessagePartBody();
-            String user = "me";
+            messageBody = getIntent().getStringExtra("Selected message");
+//            MessagePartBody messagePartBody= new MessagePartBody();
+//            String user = "me";
 
 //            try {
 //                messagePartBody = mService.users().messages().get(user, messageId).execute();

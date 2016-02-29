@@ -9,49 +9,43 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import roberterrera.com.email_client_app.Classes.Email;
 import roberterrera.com.email_client_app.R;
 
 /**
  * Created by Rob on 2/28/16.
  */
-public class EmailListAdapter extends ArrayAdapter<EmailListAdapter> {
+public class EmailListAdapter extends ArrayAdapter<Email> {
 
-    ArrayList<EmailListAdapter> mEmailViewArrayList;
+    ArrayList<Email> mArrayList;
 
-    public EmailListAdapter(Context context, ArrayList<EmailListAdapter> newEmailViewArrayList) {
+    public EmailListAdapter(Context context, ArrayList<Email> newEmailArrayList) {
         super(context, -1);
-        this.mEmailViewArrayList = mEmailViewArrayList;
 
-        mEmailViewArrayList = new ArrayList<EmailListAdapter>();
-
-        mEmailViewArrayList.addAll(newEmailViewArrayList);
+        mArrayList = new ArrayList<Email>();
     }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+
+        Email inboxList = mArrayList.get(position);
+
+        Context context = getContext();
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View inboxLayoutView = inflater.inflate(R.layout.list_item_layout, parent, false);
+
+        TextView fromText = (TextView) inboxLayoutView.findViewById(R.id.textview_from);
+        TextView subjectText = (TextView) inboxLayoutView.findViewById(R.id.textview_subject);
 //
-//    @Override
-//    public View getView(int position, View convertView, ViewGroup parent) {
-//
-//        InboxEmailList inboxEmailList = mEmailViewArrayList.get(position);
-//
-//        Context context = getContext();
-//        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//
-//        View inboxEmailsLayoutView = inflater.inflate(R.layout.email_layout,parent,false);
-//
-//        TextView headerText = (TextView) inboxEmailsLayoutView.findViewById(R.id.headerText);
-//        TextView subjectText = (TextView) inboxEmailsLayoutView.findViewById(R.id.subjectText);
-//        TextView snippetText = (TextView) inboxEmailsLayoutView.findViewById(R.id.snippetText);
-//        TextView timeText = (TextView) inboxEmailsLayoutView.findViewById(R.id.timeText);
-//
-//        headerText.setText(inboxEmailList.getHeaderText());
-//        subjectText.setText(inboxEmailList.getSubjectText());
-//        snippetText.setText(inboxEmailList.getSnippetText());
-//        timeText.setText(inboxEmailList.getTimeText());
-//
-//        return inboxEmailsLayoutView;
-//    }
-//
-//    @Override
-//    public int getCount() {
-//        return super.getCount();
-//    }
+        fromText.setText(inboxList.getmFromUser());
+        subjectText.setText(inboxList.getmSubjectLine());
+
+        return inboxLayoutView;
+    }
+
+    @Override
+    public int getCount() {
+        return super.getCount();
+    }
 }
